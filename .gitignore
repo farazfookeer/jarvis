@@ -1,0 +1,10 @@
+node_modules/
+jarvis-audit.log
+*.log
+.DS_Store
+models/
+.venv-wake/
+__pycache__/
+bin/
+config/apple-sources.json
+config/profile.json

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>local.jarvis.apple</string>
+  <key>CFBundleName</key><string>Jarvis</string>
+  <key>NSCalendarsFullAccessUsageDescription</key><string>Jarvis reads your approved calendars to show today's events and answer questions. It never changes them.</string>
+  <key>NSRemindersFullAccessUsageDescription</key><string>Jarvis reads your approved reminder lists to show what's due. It never changes them.</string>
+</dict>
+</plist>

@@ -1,0 +1,5 @@
+{
+  "name": "Alex Smith",
+  "about": "Alex is a product manager in London who likes short, direct answers.",
+  "location": { "name": "London", "lat": 51.5074, "lon": -0.1278 }
+}

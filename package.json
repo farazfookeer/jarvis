@@ -1,0 +1,20 @@
+{
+  "name": "jarvis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jarvis: a local, read-only personal assistant HUD for macOS (inbox, calendar, weather, news, voice)",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "setup": "node server.js --setup",
+    "setup-wake": "sh wakeword/setup.sh"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
+    "kokoro-js": "^1.2.1"
+  }
+}

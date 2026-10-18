@@ -1,0 +1,6 @@
+{
+  "calendarAccounts": ["iCloud"],
+  "notesAccounts": ["iCloud"],
+  "excludeCalendars": [],
+  "approvedOn": "YYYY-MM-DD"
+}
