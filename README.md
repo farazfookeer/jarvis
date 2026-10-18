@@ -4,6 +4,15 @@ A personal AI assistant that runs on your Mac. It's a heads-up display showing y
 
 It is **read-only**: it can read your Gmail and calendars but never sends, changes or deletes anything. Your keys stay in the macOS Keychain, the server only listens on your own machine, and all audio is processed locally. Only text goes to the Claude API.
 
+![The Jarvis HUD: inbox, today's calendar, weather, reminders and AI and tech news around an animated core](docs/screenshots/hud-arc.jpg)
+
+<table><tr>
+<td><img src="docs/screenshots/hud-chat.jpg" alt="Asking Jarvis what is on today and whether anything in the inbox is urgent"></td>
+<td><img src="docs/screenshots/hud-graphite.jpg" alt="The same HUD in the light graphite theme"></td>
+</tr></table>
+
+*Screenshots use demo mode: every name, email and event is made up.*
+
 Status: a working personal project. The localhost HUD and the voice loop are built. A menu bar app and confirmed write actions (draft replies, calendar holds) are planned.
 
 ## What you need
@@ -12,6 +21,17 @@ Status: a working personal project. The localhost HUD and the voice loop are bui
 - A **Claude API key** from console.anthropic.com.
 - A **Google OAuth client** (Desktop app type) with the Gmail and Calendar APIs enabled, read-only.
 - For voice: **Homebrew** (`brew install whisper-cpp`) and **Python 3** (from Homebrew or python.org).
+
+## Try it first with demo mode
+
+You can see the HUD without a Google account. Demo mode uses made-up emails, events, reminders and news, with live London weather:
+
+```sh
+npm install
+DEMO=1 node server.js
+```
+
+Then open http://localhost:4173. Chat and brainstorm still need a Claude API key in the Keychain (see Setup), and they only ever see the demo data.
 
 ## Setup
 

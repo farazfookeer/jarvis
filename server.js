@@ -17,7 +17,8 @@ import { getWeather, getNews, getTravel } from "./lib/feeds.js";
 import { synthesise, transcribe, warmUp } from "./lib/voice.js";
 import * as wake from "./lib/wake.js";
 import * as apple from "./lib/apple.js";
-import { profile } from "./lib/profile.js";
+import { profile, DEFAULT_LOCATION } from "./lib/profile.js";
+import * as demo from "./lib/demo.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, "public");
@@ -111,13 +112,13 @@ const server = http.createServer(async (req, res) => {
 
   try {
     // Auth gate: opening the app while not signed in starts Google sign-in.
-    if (p === "/" && req.method === "GET" && !(await google.isConnected())) {
+    if (p === "/" && req.method === "GET" && !demo.enabled && !(await google.isConnected())) {
       res.writeHead(302, { Location: "/api/auth/google" });
       return res.end();
     }
 
     if (p === "/api/auth/status" && req.method === "GET") {
-      return sendJson(res, 200, { connected: await google.isConnected() });
+      return sendJson(res, 200, { connected: demo.enabled || (await google.isConnected()) });
     }
 
     if (p === "/api/auth/google" && req.method === "GET") {
@@ -141,24 +142,24 @@ const server = http.createServer(async (req, res) => {
 
     if (p === "/api/gmail/search" && req.method === "POST") {
       const input = await readJson(req);
-      const payload = await google.gmailSearch(input);
+      const payload = demo.enabled ? demo.gmailSearch(input) : await google.gmailSearch(input);
       await audit("search_email", { query: input.query }, `${payload.threads.length} threads`);
       return sendJson(res, 200, payload);
     }
 
     if (p === "/api/gmail/message" && req.method === "POST") {
       const input = await readJson(req);
-      const payload = await google.gmailThread(input);
+      const payload = demo.enabled ? demo.gmailThread(input) : await google.gmailThread(input);
       await audit("read_email", { id: input.id }, `${payload.messages.length} messages`);
       return sendJson(res, 200, payload);
     }
 
     if (p === "/api/calendar/events" && req.method === "POST") {
       const input = await readJson(req);
-      const payload = await google.calendarEvents(input);
+      const payload = demo.enabled ? demo.calendarEvents(input) : await google.calendarEvents(input);
       // Approved Apple calendars join the same list. If they fail, Google still shows.
       let appleCount = 0;
-      try {
+      if (!demo.enabled) try {
         const extra = await apple.appleEvents(google.toRfc3339London(input.startTime), google.toRfc3339London(input.endTime));
         appleCount = extra.length;
         payload.events = [...payload.events, ...extra];
@@ -171,35 +172,35 @@ const server = http.createServer(async (req, res) => {
 
     // Name and short bio for the assistant's prompts (config/profile.json).
     if (p === "/api/profile" && req.method === "GET") {
-      const { name, firstName, about } = profile();
+      const { name, firstName, about } = demo.enabled ? demo.profile : profile();
       return sendJson(res, 200, { name, firstName, about });
     }
 
     if (p === "/api/feeds/weather" && req.method === "GET") {
-      return sendJson(res, 200, await getWeather());
+      return sendJson(res, 200, await getWeather(demo.enabled ? DEFAULT_LOCATION : undefined));
     }
     if (p === "/api/feeds/news" && req.method === "GET") {
-      return sendJson(res, 200, await getNews());
+      return sendJson(res, 200, demo.enabled ? demo.news() : await getNews());
     }
     if (p === "/api/feeds/travel" && req.method === "GET") {
-      return sendJson(res, 200, await getTravel());
+      return sendJson(res, 200, demo.enabled ? demo.travel() : await getTravel());
     }
 
     // Apple Reminders and Notes (approved accounts only; see lib/apple.js).
     if (p === "/api/apple/reminders" && req.method === "GET") {
-      const data = await apple.appleReminders();
+      const data = demo.enabled ? demo.reminders() : await apple.appleReminders();
       await audit("list_reminders", {}, `${data.reminders.length} open`);
       return sendJson(res, 200, data);
     }
     if (p === "/api/apple/notes/search" && req.method === "POST") {
       const { query, limit } = await readJson(req);
-      const data = await apple.searchNotes(query, limit);
+      const data = demo.enabled ? demo.searchNotes(query) : await apple.searchNotes(query, limit);
       await audit("search_notes", { query }, `${data.notes.length} notes`);
       return sendJson(res, 200, data);
     }
     if (p === "/api/apple/notes/read" && req.method === "POST") {
       const { id } = await readJson(req);
-      const note = await apple.readNote(id);
+      const note = demo.enabled ? demo.readNote(id) : await apple.readNote(id);
       await audit("read_note", { id }, `"${note.title}", ${note.text.length} chars`);
       return sendJson(res, 200, note);
     }
@@ -297,7 +298,7 @@ async function handleChat(req, res) {
 
 // ---------- startup ----------
 async function main() {
-  if (!(await hasCoreSecrets())) {
+  if (!demo.enabled && !(await hasCoreSecrets())) {
     if (!process.stdin.isTTY) {
       console.error("Missing secrets. Run `node server.js` in a terminal once to enter them.");
       process.exit(1);
@@ -308,9 +309,9 @@ async function main() {
   }
   server.listen(PORT, HOST, () => {
     const where = `http://localhost:${PORT}`;
-    console.log(`Jarvis is running at ${where}`);
+    console.log(`Jarvis is running at ${where}${demo.enabled ? " (demo mode: made-up data, Google not used)" : ""}`);
     warmUp();
-    google.isConnected().then((connected) => {
+    if (!demo.enabled) google.isConnected().then((connected) => {
       if (!connected) console.log("Open it in your browser and it'll take you through Google sign-in (read-only).");
     });
   });
